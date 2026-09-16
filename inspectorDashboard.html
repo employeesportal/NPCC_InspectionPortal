@@ -91,9 +91,10 @@
                             <label class="block text-[10px] font-black uppercase text-slate-700 mb-1">Inspection Sub Status <span class="text-rose-500">*</span></label>
                             <select id="input-sub-status" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-xs font-bold outline-none bg-white cursor-pointer">
                                 <option value="" disabled selected>-- Select Sub Status --</option>
-                                <option value="Completed - Material Pass">Completed - Material Pass</option>
-                                <option value="Completed - MOM">Completed - MOM</option>
-                                <option value="Completed - Failed in NABL Lab">Completed - Failed in NABL Lab</option>
+                                <option value="Completed-Material Pass">Completed-Material Pass</option>
+                                <option value="Completed-Material Fail">Completed-Material Fail</option>
+                                <option value="Completed-MOM">Completed-MOM</option>
+                                <option value="Completed-Failed in NABL Lab">Completed-Failed in NABL Lab</option>
                                 <option value="Hold by Dept">Hold by Dept</option>
                                 <option value="Hold by Manufacturer">Hold by Manufacturer</option>
                                 <option value="Hold by TKC">Hold by TKC</option>
@@ -129,7 +130,7 @@
                     </div>
 
                     <!-- Seal Details -->
-                    <div class="bg-amber-50/50 p-3 sm:p-4 rounded-2xl border border-amber-100 space-y-3">
+                    <div id="modal-seal-section" class="bg-amber-50/50 p-3 sm:p-4 rounded-2xl border border-amber-100 space-y-3">
                         <label class="block text-[10px] font-black uppercase text-amber-800 mb-1">Type of Seal</label>
                         <select id="input-seal-type" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-bold outline-none bg-white cursor-pointer">
                             <option value="">-- Select Seal Type --</option>
@@ -263,7 +264,6 @@
         }
     }
 
-    // 🎯 RENDER WORKFLOW LIST WITH SEPARATE BUTTONS FOR SCHEDULED TAB
     window.renderWorkflowList = function() {
         const container = document.getElementById("insp-container");
 
@@ -320,43 +320,43 @@
                 html += `
                     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm transition overflow-hidden">
                         
-                        <!-- 🎯 COMPACT RESPONSIVE SUMMARY -->
                         <div class="p-3.5 sm:p-4 cursor-pointer hover:bg-slate-50 transition text-xs flex flex-col sm:grid sm:grid-cols-7 gap-2 sm:gap-3 items-start sm:items-center" onclick="window.toggleAccordionRow('${safeIdStr}')">
                             
                             <div class="flex justify-between items-center w-full sm:w-auto sm:col-span-1">
                                 <div>
-                                    <span class="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Insp ID</span>
-                                    <span class="font-mono font-bold text-blue-700 text-xs sm:text-xs">${idStr}</span>
+                                    <span class="block text-[9px] font-black uppercase text-slate-400 mb-0.5 sm:hidden">Inspection ID</span>
+                                    <span class="font-mono font-bold text-blue-700 text-xs">${idStr}</span>
+                                    <span class="block text-[10px] font-bold text-slate-800 mt-0.5 sm:hidden">${rec.manufacturer || '-'}</span>
                                 </div>
                                 <i id="icon-${safeIdStr}" data-lucide="chevron-right" class="w-4 h-4 text-slate-400 transition-transform sm:hidden"></i>
                             </div>
 
-                            <div>
+                            <div class="hidden sm:block">
                                 <span class="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Letter No & Date</span>
                                 <span class="font-bold text-slate-700">${letterDisplay}</span>
                             </div>
 
-                            <div>
+                            <div class="hidden sm:block">
                                 <span class="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Manufacturer</span>
                                 <span class="font-bold text-slate-800">${rec.manufacturer || '-'}</span>
                             </div>
 
-                            <div>
+                            <div class="hidden sm:block">
                                 <span class="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Address</span>
                                 <span class="text-slate-600 line-clamp-1">${rec.address || '-'}</span>
                             </div>
 
-                            <div>
+                            <div class="hidden sm:block">
                                 <span class="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Mat. Category</span>
                                 <span class="text-slate-600">${rec.materialInspected || '-'}</span>
                             </div>
 
-                            <div>
+                            <div class="hidden sm:block">
                                 <span class="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Specification</span>
                                 <span class="text-slate-600 line-clamp-1">${rec.materialSpec || '-'}</span>
                             </div>
 
-                            <div class="flex items-center justify-between w-full sm:w-auto">
+                            <div class="hidden sm:flex items-center justify-between w-full sm:w-auto">
                                 <div>
                                     <span class="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Quantity</span>
                                     <span class="font-mono font-bold text-slate-800">${rec.quantity || '-'}</span>
@@ -365,8 +365,15 @@
                             </div>
                         </div>
 
-                        <!-- 🎯 EXPANDED DETAILS -->
                         <div id="detail-${safeIdStr}" class="hidden border-t border-slate-100 bg-slate-50 p-4">
+                            <div class="grid grid-cols-1 gap-2.5 mb-4 sm:hidden text-[11px]">
+                                <div><span class="block font-black text-slate-400 uppercase text-[9px]">Letter No & Date</span><span class="font-bold text-slate-700">${letterDisplay}</span></div>
+                                <div><span class="block font-black text-slate-400 uppercase text-[9px]">Address</span><span class="text-slate-700">${rec.address || '-'}</span></div>
+                                <div><span class="block font-black text-slate-400 uppercase text-[9px]">Material Category</span><span class="text-slate-700">${rec.materialInspected || '-'}</span></div>
+                                <div><span class="block font-black text-slate-400 uppercase text-[9px]">Specification</span><span class="text-slate-700">${rec.materialSpec || '-'}</span></div>
+                                <div><span class="block font-black text-slate-400 uppercase text-[9px]">Quantity</span><span class="font-mono font-bold text-slate-800">${rec.quantity || '-'}</span></div>
+                            </div>
+
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 text-[11px]">
                                 <div><span class="block font-black text-slate-400 uppercase text-[9px]">Scheme</span><span class="font-bold text-slate-700">${rec.scheme || '-'}</span></div>
                                 <div><span class="block font-black text-slate-400 uppercase text-[9px]">District</span><span class="font-bold text-slate-700">${rec.district || '-'}</span></div>
@@ -374,7 +381,6 @@
                                 <div><span class="block font-black text-slate-400 uppercase text-[9px]">TKC</span><span class="font-bold text-blue-700">${rec.tkc || '-'}</span></div>
                             </div>
                             
-                            <!-- 🎯 ACTION BUTTONS: Inspection Completed & Re-Schedule (For Scheduled Tab) OR Update Record (For Not Scheduled Tab) -->
                             <div class="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-200/60">
                                 ${isScheduledTab ? `
                                     <button onclick="window.openRescheduleModal('${safeIdStr}', '${rec.discom}')" class="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
@@ -400,9 +406,6 @@
         if (window.lucide) window.lucide.createIcons();
     }
 
-    // ==========================================
-    // MODAL CONTROL & REVIEW
-    // ==========================================
     window.openInspModal = function(inspId, discom) {
         document.getElementById("modal-insp-id").value = inspId;
         document.getElementById("modal-discom").value = discom;
@@ -416,6 +419,18 @@
         document.getElementById("input-sub-status").selectedIndex = 0;
         
         window.hideConfirmationState(); 
+
+        const sealSection = document.getElementById("modal-seal-section");
+        if (sealSection) {
+            if (discom && discom.toUpperCase() === 'PVVNL') {
+                sealSection.classList.add("hidden");
+                document.getElementById("input-seal-type").value = "";
+                document.getElementById("input-seal-serial").value = "";
+                document.getElementById("input-seal-count").value = "0";
+            } else {
+                sealSection.classList.remove("hidden");
+            }
+        }
 
         if (window.activeWorkflowTab === 'not-scheduled') {
             document.getElementById("modal-title").innerText = "Schedule Assignment";
@@ -431,7 +446,6 @@
         document.getElementById("insp-action-modal").classList.remove("hidden");
     }
 
-    // 🎯 Dedicated Re-Schedule Modal Launcher
     window.openRescheduleModal = function(inspId, discom) {
         document.getElementById("modal-insp-id").value = inspId;
         document.getElementById("modal-discom").value = discom;
@@ -480,16 +494,18 @@
             if (!statusVal) { alert("Please select an Inspection Status."); return; }
             if (!subStatusVal) { alert("Please select an Inspection Sub Status."); return; }
 
+            const isPVVNL = document.getElementById("modal-discom").value.toUpperCase() === 'PVVNL';
+
             summary = `
                 <div class="flex justify-between items-center border-b border-slate-200 pb-2 mb-2"><span class="text-slate-500">Action:</span><span class="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Mark as Completed</span></div>
                 <div class="space-y-1.5">
                     <div class="flex justify-between"><span class="text-slate-500">Completed On:</span><strong class="text-slate-800">${compDate}</strong></div>
                     <div class="flex justify-between"><span class="text-slate-500">Status:</span><strong class="text-slate-800">${statusVal}</strong></div>
                     <div class="flex justify-between"><span class="text-slate-500">Sub Status:</span><strong class="text-slate-800">${subStatusVal}</strong></div>
-                    <div class="flex justify-between"><span class="text-slate-500">Man Days:</span><strong class="text-slate-800">${document.getElementById("input-mandays").value}</strong></div>
+                    <div class="flex justify-between"><span class="text-slate-500">${isPVVNL ? 'Corrected Man days (Claimed)' : 'Man Days'}:</span><strong class="text-slate-800">${document.getElementById("input-mandays").value}</strong></div>
                     <div class="flex justify-between"><span class="text-slate-500">Report/OM:</span><strong class="text-slate-800">${omText}</strong></div>
-                    <div class="flex justify-between"><span class="text-slate-500">Insp Dates:</span><strong class="text-slate-800">${document.getElementById("input-dates-insp").value || '-'}</strong></div>
-                    <div class="flex justify-between"><span class="text-slate-500">Seal Count:</span><strong class="text-slate-800">${document.getElementById("input-seal-count").value || '0'}</strong></div>
+                    <div class="flex justify-between"><span class="text-slate-500">${isPVVNL ? 'Calculated Mandays Dates' : 'Insp Dates'}:</span><strong class="text-slate-800">${document.getElementById("input-dates-insp").value || '-'}</strong></div>
+                    ${!isPVVNL ? `<div class="flex justify-between"><span class="text-slate-500">Seal Count:</span><strong class="text-slate-800">${document.getElementById("input-seal-count").value || '0'}</strong></div>` : ''}
                 </div>
             `;
         }
@@ -505,39 +521,109 @@
     }
 
     // ==========================================
+    // GPS LOCATION HELPER 
+    // ==========================================
+    window.getLocation = function() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error("Geolocation is not supported by your browser."));
+            } else {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => resolve(position.coords),
+                    (error) => reject(error),
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            }
+        });
+    }
+
+    // ==========================================
     // SAVE LOGIC TO BACKEND
     // ==========================================
     window.handleInspSave = async function() {
         const btn = document.getElementById("btn-final-save");
         const originalBtnText = btn.innerHTML;
+        const type = document.getElementById("modal-type").value;
+        const discomValue = document.getElementById("modal-discom").value;
+        const isPVVNL = discomValue.toUpperCase() === 'PVVNL';
+
         btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Submitting...`;
         btn.disabled = true;
 
         try {
-            const type = document.getElementById("modal-type").value;
             const payload = {
                 action: "updateInspection",
                 client: currentMiUser.client,
                 inspectorName: currentMiUser.name, 
                 inspectionId: document.getElementById("modal-insp-id").value,
-                discom: document.getElementById("modal-discom").value
+                discom: discomValue
             };
+
+            // Create universal Date/Time strings for frontend log creation
+            const now = new Date();
+            const pad = (n) => n.toString().padStart(2, '0');
+            const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
+            const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
             if (type === 'not-scheduled' || type === 'scheduled-reschedule') {
                 payload.scheduleDate = document.getElementById("input-schedule-date").value;
                 payload.status = "Schedule";
+                
+                // Set Schedule log in frontend
+                payload.logDetails = `**SCHEDULE UPDATED** - Insp- ${currentMiUser.name}, ${dateStr} , ${timeStr}`;
+                payload.logdetails = payload.logDetails; // Send lowercase too just in case
+
             } else {
+                // FETCH GPS FOR INSPECTION COMPLETION
+                let coords;
+                try {
+                    btn.innerHTML = `<i data-lucide="map-pin" class="w-4 h-4 animate-pulse"></i> Fetching Location...`;
+                    coords = await window.getLocation();
+                } catch (locErr) {
+                    alert("⚠️ Location access is required to complete the inspection. Please enable GPS/Location services in your browser/device settings and try again.");
+                    btn.innerHTML = originalBtnText;
+                    btn.disabled = false;
+                    if(window.lucide) window.lucide.createIcons();
+                    return; 
+                }
+                
+                const locationString = `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`;
+                
+                // Set Completion log with GPS in frontend
+                const exactLogString = `**INSPECTION COMPLETION UPDATED** - Insp- ${currentMiUser.name}, ${dateStr} , ${timeStr}, Location - ${locationString}`;
+                payload.logDetails = exactLogString;
+                payload.logdetails = exactLogString; // Send lowercase too just in case
+                payload.gpsLocation = locationString;
+
                 payload.inspectionCompletedOn = document.getElementById("input-comp-date").value;
                 payload.manDays = document.getElementById("input-mandays").value;
                 payload.reportOm = document.getElementById("input-om").value;
                 payload.status = document.getElementById("input-status").value;
                 payload.subStatus = document.getElementById("input-sub-status").value;
-                payload.dateFrom = document.getElementById("input-dates-insp").value;
-                payload.sealType = document.getElementById("input-seal-type").value;
-                payload.sealSerial = document.getElementById("input-seal-serial").value;
-                payload.sealNoCount = document.getElementById("input-seal-count").value;
+                
+                const inspectionDates = document.getElementById("input-dates-insp").value;
+                
+                if (isPVVNL) {
+                    // FIX: Save Dates in AC (dateFrom) and Mandays in AD (dateTo)
+                    payload.dateFrom = inspectionDates; 
+                    payload.dateTo = payload.manDays; 
+                    payload.manDays = ""; // Clear manDays so it doesn't populate column AE
+                    
+                    payload.sealType = "";
+                    payload.sealSerial = "";
+                    payload.sealNoCount = "";
+                } else {
+                    // Unchanged for other Discoms
+                    payload.dateFrom = inspectionDates;
+                    payload.sealType = document.getElementById("input-seal-type").value;
+                    payload.sealSerial = document.getElementById("input-seal-serial").value;
+                    payload.sealNoCount = document.getElementById("input-seal-count").value;
+                }
+
                 payload.conductedBy = currentMiUser.name; 
             }
+
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Saving...`;
 
             const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
             const data = await res.json();
@@ -557,7 +643,6 @@
             if(window.lucide) window.lucide.createIcons();
         }
     }
-
     // ==========================================
     // HELPER LOGIC (Date sequences & Seals)
     // ==========================================
