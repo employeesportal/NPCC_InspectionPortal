@@ -310,6 +310,7 @@
             grouped[discom].forEach(rec => {
                 const idStr = rec.inspectionId || "Unknown";
                 const safeIdStr = idStr.replace(/'/g, "\\'");
+                const safeSchedDate = (rec.scheduleDate || "").replace(/'/g, "\\'");
 
                 let letterDisplay = rec.letterNo || "No Letter";
                 if(rec.letterDate && rec.letterDate !== "-") letterDisplay += ` (${rec.letterDate})`;
@@ -378,11 +379,15 @@
                                 <div><span class="block font-black text-slate-400 uppercase text-[9px]">District</span><span class="font-bold text-slate-700">${rec.district || '-'}</span></div>
                                 <div><span class="block font-black text-slate-400 uppercase text-[9px]">PQCC Name</span><span class="font-bold text-slate-700">${rec.pqccName || '-'}</span></div>
                                 <div><span class="block font-black text-slate-400 uppercase text-[9px]">TKC</span><span class="font-bold text-blue-700">${rec.tkc || '-'}</span></div>
+                                ${isScheduledTab ? `<div class="col-span-2 sm:col-span-4 bg-blue-50/80 border border-blue-100 p-2.5 rounded-xl mt-1 flex items-center gap-2">
+                                    <i data-lucide="calendar" class="w-4 h-4 text-blue-600 shrink-0"></i>
+                                    <div><span class="font-black text-[9px] uppercase text-blue-800 block">Scheduled Date</span><span class="font-mono font-bold text-blue-900 text-xs">${rec.scheduleDate || 'Not Specified'}</span></div>
+                                </div>` : ''}
                             </div>
                             
                             <div class="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-200/60">
                                 ${isScheduledTab ? `
-                                    <button onclick="window.openRescheduleModal('${safeIdStr}', '${rec.discom}')" class="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                                    <button onclick="window.openRescheduleModal('${safeIdStr}', '${rec.discom}', '${safeSchedDate}')" class="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
                                         <i data-lucide="calendar-days" class="w-4 h-4"></i> Re-Schedule
                                     </button>
                                     <button onclick="window.openInspModal('${safeIdStr}', '${rec.discom}')" class="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
@@ -445,23 +450,52 @@
         document.getElementById("insp-action-modal").classList.remove("hidden");
     }
 
-    window.openRescheduleModal = function(inspId, discom) {
-        document.getElementById("modal-insp-id").value = inspId;
-        document.getElementById("modal-discom").value = discom;
-        document.getElementById("modal-type").value = "scheduled-reschedule";
-        
-        document.getElementById("modal-id-label").innerText = inspId;
-        document.getElementById("insp-action-form").reset();
-        
-        window.hideConfirmationState();
+    window.openRescheduleModal = function(inspId, discom, currentSchedDate) {
+    document.getElementById("modal-insp-id").value = inspId;
+    document.getElementById("modal-discom").value = discom;
+    document.getElementById("modal-type").value = "scheduled-reschedule";
+    
+    document.getElementById("modal-id-label").innerText = inspId;
+    document.getElementById("insp-action-form").reset();
+    
+    // Explicitly reset the schedule date input first
+    const dateInput = document.getElementById("input-schedule-date");
+    dateInput.value = "";
 
-        document.getElementById("modal-title").innerText = "Re-Schedule Inspection";
-        document.getElementById("schedule-label-text").innerText = "Assign New Schedule Date";
-        document.getElementById("fields-schedule").classList.remove("hidden");
-        document.getElementById("fields-complete").classList.add("hidden");
+    if (currentSchedDate && currentSchedDate !== "undefined" && currentSchedDate !== "null" && currentSchedDate.trim() !== "") {
+        let formattedDate = currentSchedDate.trim();
+        
+        // Handle ISO string format (YYYY-MM-DD...)
+        if (formattedDate.includes('T')) {
+            formattedDate = formattedDate.split('T')[0];
+        } 
+        // Handle DD/MM/YYYY format -> convert to YYYY-MM-DD
+        else if (formattedDate.includes('/')) {
+            const parts = formattedDate.split('/');
+            if (parts.length === 3) {
+                formattedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+        } 
+        // Handle DD-MM-YYYY format -> convert to YYYY-MM-DD
+        else if (formattedDate.includes('-') && formattedDate.split('-')[0].length === 2) {
+            const parts = formattedDate.split('-');
+            if (parts.length === 3) {
+                formattedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+        }
 
-        document.getElementById("insp-action-modal").classList.remove("hidden");
+        dateInput.value = formattedDate;
     }
+
+    window.hideConfirmationState();
+
+    document.getElementById("modal-title").innerText = "Re-Schedule Inspection";
+    document.getElementById("schedule-label-text").innerText = "Assign New Schedule Date";
+    document.getElementById("fields-schedule").classList.remove("hidden");
+    document.getElementById("fields-complete").classList.add("hidden");
+
+    document.getElementById("insp-action-modal").classList.remove("hidden");
+}
 
     window.closeInspModal = function() {
         document.getElementById("insp-action-modal").classList.add("hidden");
@@ -514,7 +548,6 @@
                 return; 
             }
 
-            // 🎯 Reordered sequence matching form layout
             summary = `
                 <div class="flex justify-between items-center border-b border-slate-200 pb-2 mb-2"><span class="text-slate-500">Action:</span><span class="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Mark as Completed</span></div>
                 <div class="space-y-1.5">
@@ -537,16 +570,12 @@
         document.getElementById("modal-entry-state").classList.add("hidden");
         document.getElementById("modal-confirm-state").classList.remove("hidden");
     }
-
     
     window.hideConfirmationState = function() {
         document.getElementById("modal-confirm-state").classList.add("hidden");
         document.getElementById("modal-entry-state").classList.remove("hidden");
     }
 
-    // ==========================================
-    // GPS LOCATION HELPER 
-    // ==========================================
     window.getLocation = function() {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
@@ -561,9 +590,6 @@
         });
     }
 
-   // ==========================================
-    // SAVE LOGIC TO BACKEND (UPDATED)
-    // ==========================================
     window.handleInspSave = async function() {
         const btn = document.getElementById("btn-final-save");
         const originalBtnText = btn.innerHTML;
@@ -595,7 +621,6 @@
                 payload.scheduleDate = rawScheduleDate;
                 payload.status = "Schedule";
                 
-                // Convert schedule date to Indian format (DD/MM/YYYY) for log string
                 let formattedSchedDate = rawScheduleDate;
                 if (rawScheduleDate && rawScheduleDate.includes('-')) {
                     const p = rawScheduleDate.split('-');
@@ -652,7 +677,6 @@
 
             btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Saving...`;
 
-            // 🎯 SEND TO BOTH ENDPOINTS IN PARALLEL
             const logPayload = {
                 action: "saveLogDetails",
                 client: currentMiUser.client,
@@ -683,9 +707,6 @@
         }
     }
     
-    // ==========================================
-    // HELPER LOGIC (Date sequences & Seals)
-    // ==========================================
     window.parseSafeLocalMidnight = function(str) {
         if (!str) return null;
         let clean = String(str).trim().replace(/^(to|and)\s+/i, "").split("T")[0];
